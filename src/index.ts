@@ -164,7 +164,8 @@ app.post('/create-checkout-session-card-subscription', async (req, res) => {
     const {
         priceId,
         email,
-    }: { priceId: string, email: string; } = req.body;
+        firebaseId,
+    }: { priceId: string, email: string; firebaseId: string } = req.body;
 
     const {secret_key} = getKeys();
 
@@ -173,9 +174,11 @@ app.post('/create-checkout-session-card-subscription', async (req, res) => {
         typescript: true,
     });
 
+    const customer = await getOrCreateCustomer(stripe, email, firebaseId);
+
     const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
-        customer_email: !!email ? email : undefined,
+        customer: customer.id,
         line_items: [
             {
                 price: priceId,
@@ -200,7 +203,8 @@ app.post('/create-checkout-session-card', async (req, res) => {
         name,
         image,
         email,
-    }: { amount: number; name: string; image?: string; email?: string; } = req.body;
+        firebaseId
+    }: { amount: number; name: string; image?: string; email: string; firebaseId: string; } = req.body;
     const {secret_key} = getKeys();
 
     const stripe = new Stripe(secret_key as string, {
@@ -208,9 +212,11 @@ app.post('/create-checkout-session-card', async (req, res) => {
         typescript: true,
     });
 
+    const customer = await getOrCreateCustomer(stripe, email, firebaseId);
+
     const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
-        customer_email: !!email ? email : undefined,
+        customer: customer.id,
         line_items: [
             {
                 price_data: {
@@ -243,7 +249,8 @@ app.post('/create-checkout-session-klarna', async (req, res) => {
         name,
         image,
         email,
-    }: { port?: string; amount: number; name: string; image?: string; email?: string; } = req.body;
+        firebaseId
+    }: { port?: string; amount: number; name: string; image?: string; email: string; firebaseId: string; } = req.body;
     const {secret_key} = getKeys();
 
     const stripe = new Stripe(secret_key as string, {
@@ -251,9 +258,11 @@ app.post('/create-checkout-session-klarna', async (req, res) => {
         typescript: true,
     });
 
+    const customer = await getOrCreateCustomer(stripe, email, firebaseId);
+
     const session = await stripe.checkout.sessions.create({
         payment_method_types: ['klarna'],
-        customer_email: !!email ? email : undefined,
+        customer: customer.id,
         line_items: [
             {
                 price_data: {
